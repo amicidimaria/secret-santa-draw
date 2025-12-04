@@ -1,1 +1,4 @@
 project_id = "rsyeflvehhumsartraoy"
+
+[functions.send-secret-santa-emails]
+verify_jwt = false

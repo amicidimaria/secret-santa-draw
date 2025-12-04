@@ -8,6 +8,7 @@ import AddParticipantForm from '@/components/AddParticipantForm';
 import ExclusionManager from '@/components/ExclusionManager';
 import { Gift, Sparkles, Users, ShieldX, Send, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const Index = () => {
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -75,19 +76,34 @@ const Index = () => {
     
     setIsSending(true);
     
-    // Simulated email sending - in production this would call an edge function
     try {
-      // This would be replaced with actual Supabase edge function call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      setEmailsSent(true);
-      toast.success('Email inviate con successo!', {
-        description: 'Tutti i partecipanti hanno ricevuto il nome del loro Secret Santa.',
-        icon: <CheckCircle className="w-4 h-4" />,
+      const { data, error } = await supabase.functions.invoke('send-secret-santa-emails', {
+        body: {
+          assignments: assignments.map(a => ({
+            giver: { name: a.giver.name, email: a.giver.email },
+            receiver: { name: a.receiver.name }
+          })),
+          eventName: 'Secret Santa 2024'
+        }
       });
-    } catch (error) {
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.success) {
+        setEmailsSent(true);
+        toast.success('Email inviate con successo!', {
+          description: 'Tutti i partecipanti hanno ricevuto il nome del loro Secret Santa.',
+          icon: <CheckCircle className="w-4 h-4" />,
+        });
+      } else {
+        throw new Error(data?.error || 'Errore sconosciuto');
+      }
+    } catch (error: any) {
+      console.error('Error sending emails:', error);
       toast.error('Errore nell\'invio delle email', {
-        description: 'Riprova più tardi.',
+        description: error.message || 'Riprova più tardi.',
       });
     } finally {
       setIsSending(false);
