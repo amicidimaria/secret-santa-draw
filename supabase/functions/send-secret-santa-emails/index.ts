@@ -59,7 +59,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { assignments, eventName = "Secret Santa 2024", deadline }: EmailRequest = await req.json();
+    const { assignments, eventName = "Secret Santa 2025", deadline }: EmailRequest = await req.json();
 
     console.log(`Sending ${assignments.length} Secret Santa emails via Gmail...`);
 
@@ -88,7 +88,7 @@ const handler = async (req: Request): Promise<Response> => {
               ${eventName}
             </h1>
             
-            <p style="color: #c4a574; text-align: center; font-size: 16px; margin-bottom: 30px;">
+            <p style="color: #c4a574; text-align: center; font-size: 22px; margin-bottom: 30px;">
               Ciao <strong style="color: #f5e6d3;">${giver.name}</strong>! 🎄
             </p>
             
