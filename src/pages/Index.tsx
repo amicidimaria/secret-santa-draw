@@ -136,7 +136,7 @@ const Index = () => {
               Partecipanti
             </h2>
             <span className="ml-auto text-sm text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-              {participants.length}/8
+              {participants.length} partecipanti
             </span>
           </div>
           
