@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const GMAIL_USER = Deno.env.get("GMAIL_USER");
+const GMAIL_APP_PASSWORD = Deno.env.get("GMAIL_APP_PASSWORD");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -24,26 +26,31 @@ interface EmailRequest {
 }
 
 async function sendEmail(to: string, subject: string, html: string) {
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${RESEND_API_KEY}`,
-      "Content-Type": "application/json",
+  const client = new SMTPClient({
+    connection: {
+      hostname: "smtp.gmail.com",
+      port: 465,
+      tls: true,
+      auth: {
+        username: GMAIL_USER!,
+        password: GMAIL_APP_PASSWORD!,
+      },
     },
-    body: JSON.stringify({
-      from: "Secret Santa <noreply@family.secretsanta.com>",
-      to: [to],
-      subject,
-      html,
-    }),
   });
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to send email: ${error}`);
+  try {
+    await client.send({
+      from: GMAIL_USER!,
+      to: to,
+      subject: subject,
+      content: "auto",
+      html: html,
+    });
+    console.log(`Email sent to ${to}`);
+    return { id: `gmail-${Date.now()}` };
+  } finally {
+    await client.close();
   }
-
-  return response.json();
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -54,7 +61,7 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { assignments, eventName = "Secret Santa 2024", deadline }: EmailRequest = await req.json();
 
-    console.log(`Sending ${assignments.length} Secret Santa emails...`);
+    console.log(`Sending ${assignments.length} Secret Santa emails via Gmail...`);
 
     const results = [];
 
