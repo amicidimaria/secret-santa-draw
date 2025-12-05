@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+zimport { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const GMAIL_USER = Deno.env.get("GMAIL_USER");
@@ -59,7 +59,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { assignments, eventName = "Secret Santa 2025", deadline }: EmailRequest = await req.json();
+    const { assignments, eventName = "Secret Santa 2026", deadline }: EmailRequest = await req.json();
 
     console.log(`Sending ${assignments.length} Secret Santa emails via Gmail...`);
 
