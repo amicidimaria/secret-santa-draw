@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+import nodemailer from "npm:nodemailer@6.9.16";
 
 const GMAIL_USER = Deno.env.get("GMAIL_USER");
 const GMAIL_APP_PASSWORD = Deno.env.get("GMAIL_APP_PASSWORD");
@@ -25,31 +25,25 @@ interface EmailRequest {
   deadline?: string;
 }
 
-async function sendEmail(to: string, subject: string, html: string) {
-  const client = new SMTPClient({
-    connection: {
-      hostname: "smtp.gmail.com",
-      port: 465,
-      tls: true,
-      auth: {
-        username: GMAIL_USER!,
-        password: GMAIL_APP_PASSWORD!,
-      },
-    },
-  });
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: GMAIL_USER,
+    pass: GMAIL_APP_PASSWORD,
+  },
+});
 
-  try {
-    await client.send({
-      from: GMAIL_USER!,
-      to: to,
-      subject: subject,
-      html: html,
-    });
-    console.log(`Email sent to ${to}`);
-    return { id: `gmail-${Date.now()}` };
-  } finally {
-    await client.close();
-  }
+async function sendEmail(to: string, subject: string, html: string) {
+  const info = await transporter.sendMail({
+    from: GMAIL_USER,
+    to: to,
+    subject: subject,
+    html: html,
+  });
+  console.log(`Email sent to ${to}`);
+  return { id: info.messageId };
 }
 
 function buildEmailHtml(giverName: string, receiverName: string, eventName: string, deadline?: string): string {
@@ -62,7 +56,6 @@ function buildEmailHtml(giverName: string, receiverName: string, eventName: stri
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${eventName}</title>
 </head>
 <body style="margin:0;padding:0;background-color:#1a1a2e;font-family:Georgia,serif;">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#1a1a2e;">
@@ -70,9 +63,7 @@ function buildEmailHtml(giverName: string, receiverName: string, eventName: stri
 <td align="center" style="padding:40px 20px;">
 <table role="presentation" width="400" cellspacing="0" cellpadding="0" style="background:linear-gradient(135deg,#2d1b1b 0%,#1a1a2e 100%);border-radius:16px;border:2px solid #c9a227;">
 <tr>
-<td align="center" style="padding:30px 20px 10px 20px;">
-<span style="font-size:48px;">🎁</span>
-</td>
+<td align="center" style="padding:30px 20px 10px 20px;font-size:48px;">🎁</td>
 </tr>
 <tr>
 <td align="center" style="padding:10px 20px;">
@@ -139,7 +130,7 @@ const handler = async (req: Request): Promise<Response> => {
       JSON.stringify({
         success: true,
         message: `${results.length} email inviate con successo!`,
-        results
+        results,
       }),
       {
         status: 200,
@@ -151,7 +142,7 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message
+        error: error.message,
       }),
       {
         status: 500,
