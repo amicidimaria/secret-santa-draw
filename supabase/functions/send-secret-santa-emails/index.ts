@@ -83,26 +83,21 @@ const handler = async (req: Request): Promise<Response> => {
             <div style="text-align: center; margin-bottom: 30px;">
               <span style="font-size: 60px;">🎁</span>
             </div>
-            
-            <h1 style="color: #f5e6d3; text-align: center; font-size: 28px; margin-bottom: 10px; font-family: Georgia, serif;">
+            <h1 style="color: #fff; text-align: center; font-size: 28px; margin-bottom: 10px; font-family: Georgia, serif;">
               ${eventName}
             </h1>
-            
-            <p style="color: #c4a574; text-align: center; font-size: 22px; margin-bottom: 30px;">
-              Ciao <strong style="color: #f5e6d3;">${giver.name}</strong>! 🎄
+            <p style="color: #fff; text-align: center; font-size: 22px; margin-bottom: 30px;">
+              Ciao <strong style="color: #fff;">${giver.name}</strong>! 🎄
             </p>
-            
             <div style="background: linear-gradient(135deg, #8b2e2e 0%, #6b1e1e 100%); border-radius: 12px; padding: 25px; text-align: center; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(139, 46, 46, 0.3);">
-              <p style="color: #f5e6d3; margin: 0 0 10px 0; font-size: 14px; text-transform: uppercase; letter-spacing: 2px;">
+              <p style="color: #fff; margin: 0 0 10px 0; font-size: 14px; text-transform: uppercase; letter-spacing: 2px;">
                 Dovrai fare un regalo a:
               </p>
-              <p style="color: #ffd700; margin: 0; font-size: 32px; font-weight: bold; font-family: Georgia, serif; text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);">
+              <p style="color: #fff; margin: 0; font-size: 32px; font-weight: bold; font-family: Georgia, serif; text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);">
                 ✨ ${receiver.name} ✨
               </p>
             </div>
-            
             ${deadlineText}
-            
             <div style="border-top: 1px solid #3a2020; margin-top: 30px; padding-top: 20px; text-align: center;">
               <p style="color: #666; font-size: 12px; margin: 0;">
                 Ricorda: è un segreto! Non dirlo a nessuno 🤫
