@@ -83,7 +83,7 @@ const Index = () => {
             giver: { name: a.giver.name, email: a.giver.email },
             receiver: { name: a.receiver.name }
           })),
-          eventName: 'Secret Santa 2024'
+          eventName: 'Secret Santa 2025'
         }
       });
 
