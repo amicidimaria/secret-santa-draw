@@ -1,4 +1,4 @@
-zimport { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const GMAIL_USER = Deno.env.get("GMAIL_USER");
@@ -43,7 +43,6 @@ async function sendEmail(to: string, subject: string, html: string) {
       from: GMAIL_USER!,
       to: to,
       subject: subject,
-      content: "auto",
       html: html,
     });
     console.log(`Email sent to ${to}`);
@@ -53,6 +52,60 @@ async function sendEmail(to: string, subject: string, html: string) {
   }
 }
 
+function buildEmailHtml(giverName: string, receiverName: string, eventName: string, deadline?: string): string {
+  const deadlineHtml = deadline
+    ? `<p style="font-size:14px;color:#666666;margin:16px 0 0 0;">📅 Data limite: ${deadline}</p>`
+    : "";
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${eventName}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#1a1a2e;font-family:Georgia,serif;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#1a1a2e;">
+<tr>
+<td align="center" style="padding:40px 20px;">
+<table role="presentation" width="400" cellspacing="0" cellpadding="0" style="background:linear-gradient(135deg,#2d1b1b 0%,#1a1a2e 100%);border-radius:16px;border:2px solid #c9a227;">
+<tr>
+<td align="center" style="padding:30px 20px 10px 20px;">
+<span style="font-size:48px;">🎁</span>
+</td>
+</tr>
+<tr>
+<td align="center" style="padding:10px 20px;">
+<h1 style="color:#c9a227;font-size:28px;margin:0;font-weight:normal;">${eventName}</h1>
+</td>
+</tr>
+<tr>
+<td align="center" style="padding:20px;">
+<p style="color:#ffffff;font-size:18px;margin:0;">Ciao <span style="color:#c9a227;">${giverName}</span>! 🎄</p>
+</td>
+</tr>
+<tr>
+<td align="center" style="padding:10px 20px 30px 20px;">
+<div style="background-color:rgba(139,69,69,0.4);border-radius:12px;padding:20px;border:1px solid rgba(201,162,39,0.3);">
+<p style="color:#999999;font-size:12px;text-transform:uppercase;letter-spacing:2px;margin:0 0 10px 0;">Dovrai fare un regalo a:</p>
+<p style="color:#c9a227;font-size:24px;margin:0;">✨ ${receiverName} ✨</p>
+</div>
+</td>
+</tr>
+<tr>
+<td align="center" style="padding:0 20px 30px 20px;">
+${deadlineHtml}
+<p style="font-size:14px;color:#888888;margin:16px 0 0 0;">Ricorda: è un segreto! Non dirlo a nessuno 🤫</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+</body>
+</html>`;
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -60,53 +113,15 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const { assignments, eventName = "Secret Santa 2025", deadline }: EmailRequest = await req.json();
-
     console.log(`Sending ${assignments.length} Secret Santa emails via Gmail...`);
 
     const results = [];
 
     for (const assignment of assignments) {
       const { giver, receiver } = assignment;
-
       console.log(`Sending email to ${giver.name} (${giver.email}) -> recipient: ${receiver.name}`);
 
-      const deadlineText = deadline 
-        ? `<p style="margin-top: 20px; color: #666;">📅 <strong>Data limite:</strong> ${deadline}</p>` 
-        : '';
-
-      const html = `
-        <!DOCTYPE html>
-        <html>
-        <head><meta charset="utf-8"></head>
-        <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1a0a0a; margin: 0; padding: 40px 20px;">
-          <div style="max-width: 500px; margin: 0 auto; background: linear-gradient(180deg, #2a1515 0%, #1a0a0a 100%); border-radius: 16px; padding: 40px; border: 1px solid #3a2020;">
-            <div style="text-align: center; margin-bottom: 30px;">
-              <span style="font-size: 60px;">🎁</span>
-            </div>
-            <h1 style="color: #fff; text-align: center; font-size: 28px; margin-bottom: 10px; font-family: Georgia, serif;">
-              ${eventName}
-            </h1>
-            <p style="color: #fff; text-align: center; font-size: 22px; margin-bottom: 30px;">
-              Ciao <strong style="color: #fff;">${giver.name}</strong>! 🎄
-            </p>
-            <div style="background: linear-gradient(135deg, #8b2e2e 0%, #6b1e1e 100%); border-radius: 12px; padding: 25px; text-align: center; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(139, 46, 46, 0.3);">
-              <p style="color: #fff; margin: 0 0 10px 0; font-size: 14px; text-transform: uppercase; letter-spacing: 2px;">
-                Dovrai fare un regalo a:
-              </p>
-              <p style="color: #fff; margin: 0; font-size: 32px; font-weight: bold; font-family: Georgia, serif; text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);">
-                ✨ ${receiver.name} ✨
-              </p>
-            </div>
-            ${deadlineText}
-            <div style="border-top: 1px solid #3a2020; margin-top: 30px; padding-top: 20px; text-align: center;">
-              <p style="color: #666; font-size: 12px; margin: 0;">
-                Ricorda: è un segreto! Non dirlo a nessuno 🤫
-              </p>
-            </div>
-          </div>
-        </body>
-        </html>
-      `;
+      const html = buildEmailHtml(giver.name, receiver.name, eventName, deadline);
 
       const emailResponse = await sendEmail(
         giver.email,
@@ -121,10 +136,10 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("All emails sent successfully!");
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         message: `${results.length} email inviate con successo!`,
-        results 
+        results
       }),
       {
         status: 200,
@@ -134,9 +149,9 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error sending Secret Santa emails:", error);
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message 
+      JSON.stringify({
+        success: false,
+        error: error.message
       }),
       {
         status: 500,
